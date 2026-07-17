@@ -26,6 +26,142 @@
       <p class="muted" style="margin-top:12px;"><a href="mailto:mohamedsami8844@gmail.com">mohamedsami8844@gmail.com</a></p>
     </div>
 
+    <h2>Report a bug</h2>
+    <div class="card">
+      <p class="muted" style="margin-top:0;">Tell us what went wrong and which part of the app it happened in — it helps us fix it faster.</p>
+      <form id="bugForm">
+        <div class="field">
+          <label for="type">Issue type <span class="req">*</span></label>
+          <select id="type" required></select>
+        </div>
+        <div class="field">
+          <label for="section">Tab / Section <span class="req">*</span></label>
+          <select id="section" required></select>
+        </div>
+        <div class="field">
+          <label for="description">What went wrong? <span class="req">*</span></label>
+          <textarea id="description" required placeholder="What happened, and what did you expect? Steps to reproduce if you can."></textarea>
+        </div>
+        <div class="field">
+          <label for="name">Name (optional)</label>
+          <input id="name" type="text" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="email">Email for follow-up (optional)</label>
+          <input id="email" type="email" autocomplete="email" inputmode="email" />
+        </div>
+        <!-- Honeypot: bots fill this; humans never see it. Formspree drops it. -->
+        <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
+               style="position:absolute;left:-9999px;" aria-hidden="true" />
+        <button class="form-btn" type="submit">Send report</button>
+        <p id="status" class="form-status" hidden></p>
+        <p class="form-meta">
+          Sent automatically to help us follow up —
+          <strong>Version:</strong> <span id="m-version">—</span> ·
+          <strong>OS:</strong> <span id="m-os">—</span> ·
+          <strong>Device:</strong> <span id="m-device">—</span>
+        </p>
+      </form>
+    </div>
+    <script>
+      (function () {
+        // Paste your Formspree form endpoint here to collect submissions in the
+        // dashboard. Get it at https://formspree.io (create a form → copy /f/xxxx).
+        var FORMSPREE_ENDPOINT = "https://formspree.io/f/mbdngorn";
+        var EMAIL = "mohamedsami8844@gmail.com"; // fallback if endpoint unset / offline
+
+        var TYPES = ["Bug", "Crash", "Performance", "UI", "Suggestion", "Other"];
+        var TYPE_LABELS = {
+          Bug: "Bug", Crash: "Crash / freeze", Performance: "Performance (slow or laggy)",
+          UI: "Visual / UI", Suggestion: "Feature suggestion", Other: "Other"
+        };
+        var SECTIONS = [
+          "Home / Prayer", "Quran Reader", "Qiyam", "Qiyam Practice",
+          "Murajaa (Review)", "Quran Heart", "Bookmarks", "Surah Info",
+          "Topics", "Downloads", "Notifications / Reminders", "Settings", "Other"
+        ];
+
+        var p = new URLSearchParams(location.search);
+        var $ = function (id) { return document.getElementById(id); };
+        var typeSel = $("type"), sectionSel = $("section"), status = $("status");
+
+        TYPES.forEach(function (t) {
+          var o = document.createElement("option");
+          o.value = t; o.textContent = TYPE_LABELS[t]; typeSel.appendChild(o);
+        });
+        SECTIONS.forEach(function (s) {
+          var o = document.createElement("option");
+          o.value = s; o.textContent = s; sectionSel.appendChild(o);
+        });
+        $("m-version").textContent = p.get("v") || "—";
+        $("m-os").textContent = p.get("os") || "—";
+        $("m-device").textContent = p.get("device") || "—";
+
+        function showStatus(msg, ok) {
+          status.textContent = msg;
+          status.className = "form-status " + (ok ? "ok" : "err");
+          status.hidden = false;
+        }
+
+        function payload() {
+          return {
+            type: typeSel.value,
+            section: sectionSel.value,
+            description: $("description").value.trim(),
+            name: $("name").value.trim(),
+            email: $("email").value.trim(),
+            version: p.get("v") || "",
+            os: p.get("os") || "",
+            device: p.get("device") || "",
+            _subject: "[Qiyam] " + typeSel.value + " — " + sectionSel.value
+          };
+        }
+
+        function openMail(d) {
+          var body = d.description + "\n\n— — —\n"
+            + "Type: " + d.type + "\n"
+            + "Section: " + d.section + "\n"
+            + "Name: " + (d.name || "-") + "\n"
+            + "Email: " + (d.email || "-") + "\n"
+            + "Version: " + (d.version || "-") + "\n"
+            + "OS: " + (d.os || "-") + "\n"
+            + "Device: " + (d.device || "-");
+          location.href = "mailto:" + EMAIL
+            + "?subject=" + encodeURIComponent(d._subject)
+            + "&body=" + encodeURIComponent(body);
+        }
+
+        $("bugForm").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var d = payload();
+
+          // Not configured yet → fall back to email so the form never breaks.
+          if (FORMSPREE_ENDPOINT.indexOf("REPLACE") !== -1) { openMail(d); return; }
+
+          var btn = e.target.querySelector("button[type=submit]");
+          btn.disabled = true;
+          fetch(FORMSPREE_ENDPOINT, {
+            method: "POST",
+            headers: { "Accept": "application/json", "Content-Type": "application/json" },
+            body: JSON.stringify(d)
+          }).then(function (res) {
+            btn.disabled = false;
+            if (res.ok) {
+              e.target.reset();
+              showStatus("Thank you! Your report was received.", true);
+            } else {
+              showStatus("Couldn't submit. Opening email instead…", false);
+              openMail(d);
+            }
+          }).catch(function () {
+            btn.disabled = false;
+            showStatus("Network error. Opening email instead…", false);
+            openMail(d);
+          });
+        });
+      })();
+    </script>
+
     <h2>Frequently asked</h2>
 
     <div class="card">

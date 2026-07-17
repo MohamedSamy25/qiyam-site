@@ -27,6 +27,155 @@
       <p class="muted" style="margin-top:12px;"><a href="mailto:mohamedsami8844@gmail.com">mohamedsami8844@gmail.com</a></p>
     </div>
 
+    <h2>الإبلاغ عن مشكلة</h2>
+    <div class="card">
+      <p class="muted" style="margin-top:0;">أخبرنا بما حدث وفي أي قسم من التطبيق ظهرت المشكلة — يساعدنا ذلك على إصلاحها بسرعة.</p>
+      <form id="bugForm">
+        <div class="field">
+          <label for="type">نوع المشكلة <span class="req">*</span></label>
+          <select id="type" required></select>
+        </div>
+        <div class="field">
+          <label for="section">التبويب / القسم <span class="req">*</span></label>
+          <select id="section" required></select>
+        </div>
+        <div class="field">
+          <label for="description">ما المشكلة؟ <span class="req">*</span></label>
+          <textarea id="description" required placeholder="ماذا حدث؟ وما الذي كنت تتوقعه؟ خطوات إعادة الحدوث إن أمكن."></textarea>
+        </div>
+        <div class="field">
+          <label for="name">الاسم (اختياري)</label>
+          <input id="name" type="text" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="email">بريدك للتواصل (اختياري)</label>
+          <input id="email" type="email" autocomplete="email" inputmode="email" />
+        </div>
+        <!-- فخّ للبريد المزعج: تملؤه الروبوتات فقط، ويتجاهله Formspree. -->
+        <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
+               style="position:absolute;left:-9999px;" aria-hidden="true" />
+        <button class="form-btn" type="submit">إرسال البلاغ</button>
+        <p id="status" class="form-status" hidden></p>
+        <p class="form-meta">
+          تُرسَل تلقائيًا لتسهيل المتابعة —
+          <strong>الإصدار:</strong> <span id="m-version">—</span> ·
+          <strong>النظام:</strong> <span id="m-os">—</span> ·
+          <strong>الجهاز:</strong> <span id="m-device">—</span>
+        </p>
+      </form>
+    </div>
+    <script>
+      (function () {
+        // ألصق رابط نموذج Formspree هنا لتجميع البلاغات في لوحة التحكم.
+        // احصل عليه من https://formspree.io (أنشئ نموذجًا ← انسخ رابط ‎/f/xxxx).
+        var FORMSPREE_ENDPOINT = "https://formspree.io/f/mbdngorn";
+        var EMAIL = "mohamedsami8844@gmail.com"; // بديل إن لم يُضبط الرابط أو انقطع الاتصال
+
+        // Display in Arabic; keep a stable English value so reports stay easy to sort.
+        var TYPES = [
+          { ar: "خطأ", en: "Bug" },
+          { ar: "تعطّل / تجمّد", en: "Crash" },
+          { ar: "الأداء (بطء أو تقطيع)", en: "Performance" },
+          { ar: "مظهر / واجهة", en: "UI" },
+          { ar: "اقتراح ميزة", en: "Suggestion" },
+          { ar: "أخرى", en: "Other" }
+        ];
+        var SECTIONS = [
+          { ar: "الرئيسية / الصلاة", en: "Home / Prayer" },
+          { ar: "المصحف (القارئ)", en: "Quran Reader" },
+          { ar: "قيام الليل", en: "Qiyam" },
+          { ar: "تمارين القيام", en: "Qiyam Practice" },
+          { ar: "المراجعة", en: "Murajaa (Review)" },
+          { ar: "قلب القرآن", en: "Quran Heart" },
+          { ar: "العلامات المرجعية", en: "Bookmarks" },
+          { ar: "معلومات السورة", en: "Surah Info" },
+          { ar: "الموضوعات", en: "Topics" },
+          { ar: "التنزيلات", en: "Downloads" },
+          { ar: "التنبيهات والتذكيرات", en: "Notifications / Reminders" },
+          { ar: "الإعدادات", en: "Settings" },
+          { ar: "أخرى", en: "Other" }
+        ];
+
+        var p = new URLSearchParams(location.search);
+        var $ = function (id) { return document.getElementById(id); };
+        var typeSel = $("type"), sectionSel = $("section"), status = $("status");
+
+        function fill(sel, list) {
+          list.forEach(function (s) {
+            var o = document.createElement("option");
+            o.value = s.en; o.textContent = s.ar; sel.appendChild(o);
+          });
+        }
+        fill(typeSel, TYPES);
+        fill(sectionSel, SECTIONS);
+        $("m-version").textContent = p.get("v") || "—";
+        $("m-os").textContent = p.get("os") || "—";
+        $("m-device").textContent = p.get("device") || "—";
+
+        function showStatus(msg, ok) {
+          status.textContent = msg;
+          status.className = "form-status " + (ok ? "ok" : "err");
+          status.hidden = false;
+        }
+
+        function payload() {
+          return {
+            type: typeSel.value,
+            section: sectionSel.value,
+            description: $("description").value.trim(),
+            name: $("name").value.trim(),
+            email: $("email").value.trim(),
+            version: p.get("v") || "",
+            os: p.get("os") || "",
+            device: p.get("device") || "",
+            _subject: "[Qiyam] " + typeSel.value + " — " + sectionSel.value
+          };
+        }
+
+        function openMail(d) {
+          var body = d.description + "\n\n— — —\n"
+            + "Type: " + d.type + "\n"
+            + "Section: " + d.section + "\n"
+            + "Name: " + (d.name || "-") + "\n"
+            + "Email: " + (d.email || "-") + "\n"
+            + "Version: " + (d.version || "-") + "\n"
+            + "OS: " + (d.os || "-") + "\n"
+            + "Device: " + (d.device || "-");
+          location.href = "mailto:" + EMAIL
+            + "?subject=" + encodeURIComponent(d._subject)
+            + "&body=" + encodeURIComponent(body);
+        }
+
+        $("bugForm").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var d = payload();
+
+          if (FORMSPREE_ENDPOINT.indexOf("REPLACE") !== -1) { openMail(d); return; }
+
+          var btn = e.target.querySelector("button[type=submit]");
+          btn.disabled = true;
+          fetch(FORMSPREE_ENDPOINT, {
+            method: "POST",
+            headers: { "Accept": "application/json", "Content-Type": "application/json" },
+            body: JSON.stringify(d)
+          }).then(function (res) {
+            btn.disabled = false;
+            if (res.ok) {
+              e.target.reset();
+              showStatus("شكرًا لك! تم استلام بلاغك.", true);
+            } else {
+              showStatus("تعذّر الإرسال. سنفتح البريد بدلًا من ذلك…", false);
+              openMail(d);
+            }
+          }).catch(function () {
+            btn.disabled = false;
+            showStatus("خطأ في الاتصال. سنفتح البريد بدلًا من ذلك…", false);
+            openMail(d);
+          });
+        });
+      })();
+    </script>
+
     <h2>أسئلة شائعة</h2>
 
     <div class="card">

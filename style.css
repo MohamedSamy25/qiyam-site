@@ -69,6 +69,50 @@ li strong { color: var(--accent-strong); font-weight: 600; }
 .langswitch a { color: var(--muted); margin: 0 8px; padding-bottom: 2px; }
 .langswitch a.active { color: var(--accent-strong); font-weight: 600; border-bottom: 2px solid var(--accent); }
 
+/* Bug-report form */
+.field { margin: 16px 0; }
+.field label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.95rem; }
+.field .req { color: var(--accent-strong); }
+.field select,
+.field textarea,
+.field input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  color: var(--text);
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+.field textarea { min-height: 130px; resize: vertical; }
+.field select:focus,
+.field textarea:focus,
+.field input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+/* Native dropdown options render on a light menu in most browsers. */
+.field select option { color: #000; }
+.form-meta {
+  font-size: 0.85rem; color: var(--muted);
+  margin: 14px 0 0; padding-top: 12px;
+  border-top: 1px dashed var(--card-border);
+}
+.form-meta strong { color: var(--text); font-weight: 600; }
+.form-btn {
+  width: 100%; border: 0; cursor: pointer;
+  background: linear-gradient(180deg, var(--accent-strong), var(--accent));
+  color: #1a1204; padding: 13px 24px; border-radius: 12px;
+  font-weight: 600; font-family: inherit; font-size: 1rem; margin-top: 8px;
+  box-shadow: 0 6px 18px rgba(217, 179, 74, 0.25);
+}
+.form-btn:hover { filter: brightness(1.05); }
+.form-status {
+  margin: 14px 0 0; padding: 11px 14px; border-radius: 12px;
+  font-size: 0.95rem; font-weight: 600;
+}
+.form-status.ok  { color: #163a1e; background: var(--accent-strong); }
+.form-status.err { color: #f6d5d5; background: rgba(200, 70, 70, 0.18); border: 1px solid rgba(200, 70, 70, 0.4); }
+[dir="rtl"] .field { text-align: right; }
+
 /* RTL (Arabic) */
 [dir="rtl"] { text-align: right; }
 [dir="rtl"] ul { padding-left: 0; padding-right: 22px; }
